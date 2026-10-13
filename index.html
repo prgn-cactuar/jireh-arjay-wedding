@@ -101,17 +101,19 @@ h2.it { font-style: normal; }
 .curtain {
   position: absolute; top: 0; bottom: 0; width: 51%;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.18), rgba(110,60,70,.10) 70%, rgba(110,60,70,.18)),
-    repeating-linear-gradient(90deg, #cfa9a8 0, #e9cfcc 6px, #f6e6e3 9px, #e2c2bf 13px, #c89f9f 19px);
+    linear-gradient(104deg, transparent 25%, rgba(255,255,255,.45) 42%, transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.25), rgba(120,70,80,.06) 70%, rgba(120,70,80,.14)),
+    repeating-linear-gradient(90deg, #e6d0d1 0, #f6ebeb 6px, #fffafa 9px, #f2e3e3 13px, #e0c9ca 19px);
   transition: clip-path 2.4s cubic-bezier(.65,0,.25,1) 1.1s;
   filter: drop-shadow(0 2px 4px rgba(80,40,50,.25));
 }
+.curtain .cf { position: absolute; inset: 0; width: 100%; height: 100%; }
 .curtain.l { left: 0;  clip-path: polygon(0 0, 100% 0, 100% 56%, 100% 100%, 0 100%); }
 .curtain.r { right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 56%); }
 .opened .curtain.l { clip-path: polygon(0 0, 80% 0, 24% 58%, 42% 100%, 0 100%); }
 .opened .curtain.r { clip-path: polygon(20% 0, 100% 0, 100% 100%, 58% 100%, 76% 58%); }
-.tieback { position: absolute; top: 56%; width: 26px; height: 26px; opacity: 0; transition: opacity .8s ease 3.1s; }
-.tieback.l { left: 6%; } .tieback.r { right: 6%; }
+.tieback { position: absolute; top: calc(56% - 14px); width: 46px; height: 58px; opacity: 0; transition: opacity .8s ease 3.1s; }
+.tieback.l { left: calc(6% - 10px); } .tieback.r { right: calc(6% - 10px); }
 .opened .tieback { opacity: 1; }
 .valance { position: absolute; top: 0; left: 0; width: 100%; z-index: 2; }
 .estate { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: auto; z-index: 3; }
@@ -384,23 +386,78 @@ function garland(h, opt = {}) {
   return `<svg viewBox="0 0 390 ${h}" aria-hidden="true">${clusters}<path d="M${P[0]} Q${P[1]} ${P[2]}" fill="none" stroke="#7b6a58" stroke-width="2.6"/><g filter="url(#emb)">${leaves}</g>${pearls}<g filter="url(#emb)">${roses}</g></svg>`;
 }
 
+const bloom5 = (x, y, r, c, core = "#e8c46a") => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rnd() * 72)})">${[0, 72, 144, 216, 288].map(a => { const px = Math.cos(a * Math.PI / 180) * r * .62, py = Math.sin(a * Math.PI / 180) * r * .62; return `<ellipse cx="${f(px)}" cy="${f(py)}" rx="${f(r * .52)}" ry="${f(r * .4)}" transform="rotate(${a} ${f(px)} ${f(py)})" fill="${c}"/>`; }).join("")}<circle r="${f(r * .26)}" fill="${core}"/></g>`;
+
+function tieback(side) {
+  seed = side === "l" ? 301 : 302;
+  let s = "";
+  for (let k = 0; k < 9; k++) s += leaf(23, 20, 10 + rnd() * 4, k * 40 + rnd() * 20, k % 2 ? "#7d8c63" : "#8a9870");
+  s += wisteria(15, 30, 22, 9) + wisteria(31, 30, 18, 8);
+  s += bloom5(12, 14, 5, "#9fb4c8") + bloom5(35, 15, 5, "#f1e3c4") + bloom5(14, 27, 4.5, "#e6c2c3") + bloom5(33, 27, 4.5, "#c8b2d6");
+  s += rose(23, 20, 8, "dusty");
+  return `<svg class="tieback ${side}" viewBox="0 0 46 58" aria-hidden="true"><g filter="url(#emb)">${s}</g></svg>`;
+}
+
+
+function curtainFlowers(side) {
+  seed = side === "l" ? 501 : 777;
+  const W = 160, H = 430;
+  const daisy = (x, y, r) => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rnd() * 45)})">${Array.from({ length: 8 }, (_, k) => `<ellipse cx="0" cy="${f(-r * .6)}" rx="${f(r * .22)}" ry="${f(r * .5)}" transform="rotate(${k * 45})" fill="#fffdfb" stroke="#dcc6c6" stroke-width=".3"/>`).join("")}<circle r="${f(r * .24)}" fill="#e8c46a"/></g>`;
+  const sprig = (x, y, len, ang, c) => {
+    let o = `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(ang)})"><path d="M0 0 Q${f(len * .3)} ${f(-len * .5)} 0 ${f(-len)}" fill="none" stroke="#8a9870" stroke-width=".7"/>`;
+    for (let k = 1; k <= 4; k++) { const t = k / 5; o += `<ellipse cx="${f(len * .3 * 2 * t * (1 - t) + (k % 2 ? 1.6 : -1.6))}" cy="${f(-len * t)}" rx="1.3" ry="1.9" fill="${c}"/>`; }
+    return o + `</g>`;
+  };
+  const knots = (x, y, c) => Array.from({ length: 3 }, () => `<circle cx="${f(x + (rnd() - .5) * 8)}" cy="${f(y + (rnd() - .5) * 8)}" r="${f(.8 + rnd() * .6)}" fill="${c}"/>`).join("");
+  const soft = ["#e6c2c3", "#c8b2d6", "#a9bfd6", "#f1e3c4", "#b9c4a5", "#e3c48f", "#ffffff", "#ffffff"];
+  let s = "";
+  for (let gy = 0; gy < H; gy += 30) {
+    for (let gx = 0; gx < W; gx += 28) {
+      if (rnd() < .14) continue;
+      const x = gx + 4 + rnd() * 20, y = gy + 4 + rnd() * 22, kind = rnd(), c = pick(soft);
+      let g = "";
+      if (rnd() < .6) g += leaf(x, y, 6 + rnd() * 4, rnd() * 360, rnd() < .5 ? "#9aa585" : "#b9c4a5");
+      if (kind < .26) g += bloom5(x, y, 3 + rnd() * 3, c, rnd() < .5 ? "#e8c46a" : "#c48c94");
+      else if (kind < .42) g += rose(x, y, 3 + rnd() * 2.6, pick(["cream", "blush", "dusty", "cream"]));
+      else if (kind < .6) g += daisy(x, y, 4 + rnd() * 3);
+      else if (kind < .74) g += sprig(x, y, 12 + rnd() * 8, (rnd() - .5) * 70, pick(["#b297bd", "#c8b2d6", "#a9bfd6", "#e6c2c3"]));
+      else if (kind < .86) g += knots(x, y, pick(soft));
+      else g += bloom5(x, y, 2 + rnd() * 1.5, "#ffffff", "#f1e3c4") + bloom5(x + 5, y + 4, 1.8 + rnd(), pick(soft));
+      s += `<g opacity="${f(.75 + rnd() * .25)}">${g}</g>`;
+    }
+  }
+  return `<svg class="cf" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><g filter="url(#emb)">${s}</g></svg>`;
+}
+
 function valance() {
+  seed = 120;
+  const pale = ["#e6c2c3", "#c8b2d6", "#a9bfd6", "#f1e3c4", "#ffffff"];
   let s = "";
   for (let i = 0; i < 3; i++) {
     const x0 = i * 130;
-    s += `<g filter="url(#emb)">${sat(`<path d="M${x0} 10 Q${x0+65} 78 ${x0+130} 10 Q${x0+65} 44 ${x0} 10Z"/>`, "#f1dcd8", "satB")}
-      <path d="M${x0+14} 16 Q${x0+65} 58 ${x0+116} 16" fill="none" stroke="#d2aeac" stroke-width="1"/>
-      <path d="M${x0+28} 14 Q${x0+65} 44 ${x0+102} 14" fill="none" stroke="#d2aeac" stroke-width="1"/></g>`;
-    s += strand([x0 + 2, 12], [x0 + 65, 80], [x0 + 128, 12], 24, 2.3);
-    s += strand([x0 + 10, 12], [x0 + 65, 64], [x0 + 120, 12], 18, 1.6);
+    s += `<g filter="url(#emb)">${sat(`<path d="M${x0} 10 Q${x0+65} 78 ${x0+130} 10 Q${x0+65} 44 ${x0} 10Z"/>`, "#f9f0ef", "satB")}
+      <path d="M${x0+14} 16 Q${x0+65} 58 ${x0+116} 16" fill="none" stroke="#e3cccd" stroke-width="1"/>
+      <path d="M${x0+28} 14 Q${x0+65} 44 ${x0+102} 14" fill="none" stroke="#e3cccd" stroke-width="1"/></g>`;
+    let g = `<path d="M${x0 + 4} 12 Q${x0 + 65} 80 ${x0 + 126} 12" fill="none" stroke="#7b6a58" stroke-width="1"/>`;
+    for (let k = 0; k <= 16; k++) {
+      const [x, y] = q([x0 + 4, 12], [x0 + 65, 80], [x0 + 126, 12], k / 16);
+      g += leaf(x, y, 7 + rnd() * 2, rnd() * 360);
+      g += k % 4 === 2 ? rose(x, y, 4.2, pick(["blush", "cream", "dusty"])) : k % 2 ? bloom5(x, y, 3.4, pick(pale)) : "";
+    }
+    s += `<g filter="url(#emb)">${g}</g>`;
   }
   for (let i = 0; i <= 3; i++) {
     const x = i * 130;
-    s += `<g filter="url(#emb)">${sat(`<path d="M${x-9} 8 L${x+9} 8 L${x+6} 56 Q${x} 62 ${x-6} 56Z"/>`, "#e7c9c6", "satV")}</g>`;
-    for (let k = 0; k < 5; k++) s += pearl(x, 62 + k * 5.5, 2.3 - k * .15);
+    s += `<g filter="url(#emb)">${sat(`<path d="M${x-9} 8 L${x+9} 8 L${x+6} 56 Q${x} 62 ${x-6} 56Z"/>`, "#f4e6e5", "satV")}</g>`;
+    s += wisteria(x, 60, 22, 9) + `<g filter="url(#emb)">${rose(x, 58, 4.5, "dusty")}</g>`;
   }
-  s += `<rect x="0" y="0" width="390" height="11" fill="#e9cfcb"/><rect x="0" y="0" width="390" height="11" fill="url(#satV)"/>`;
-  for (let x = 3; x < 390; x += 6.2) s += pearl(x, 11, 2.4);
+  s += `<rect x="0" y="0" width="390" height="11" fill="#f6ebea"/><rect x="0" y="0" width="390" height="11" fill="url(#satV)"/>`;
+  let top = "";
+  for (let x = 2; x < 392; x += 9) {
+    top += leaf(x, 11, 7, x % 18 < 9 ? 30 : 150);
+    top += (x / 9 | 0) % 3 === 1 ? rose(x, 11, 3.8, pick(["blush", "cream", "dusty", "wine"])) : bloom5(x, 11, 3.4, pick(pale));
+  }
+  s += `<g filter="url(#emb)">${top}</g>`;
   return `<svg class="valance" viewBox="0 0 390 96" aria-hidden="true">${s}</svg>`;
 }
 
@@ -655,9 +712,9 @@ document.getElementById("card").innerHTML = `
   <section class="hero" aria-label="${esc(`${I.first1} and ${I.first2}, ${I.dateShort}`)}">
     <div class="drape">
       <div class="names-hero"><b>${esc(I.first1)}</b><i>&amp;</i><b>${esc(I.first2)}</b><small>${esc(I.dateShort)}</small></div>
-      <div class="curtain l"></div><div class="curtain r"></div>
-      <svg class="tieback l" viewBox="0 0 26 26">${Array.from({length: 10}, (_, i) => pearl(13 + Math.cos(i/10*6.28)*9, 13 + Math.sin(i/10*6.28)*9, 2.6)).join("")}</svg>
-      <svg class="tieback r" viewBox="0 0 26 26">${Array.from({length: 10}, (_, i) => pearl(13 + Math.cos(i/10*6.28)*9, 13 + Math.sin(i/10*6.28)*9, 2.6)).join("")}</svg>
+      <div class="curtain l">${curtainFlowers("l")}</div><div class="curtain r">${curtainFlowers("r")}</div>
+      ${tieback("l")}
+      ${tieback("r")}
     </div>
     ${valance()}
     ${estate()}
